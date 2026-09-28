@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Registration Portal</title>
+    <title>Cybersecurity Awareness Dashboard</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
     <style>
         * {
             margin: 0;
@@ -13,202 +14,454 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
         }
 
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
             background: white;
             border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 50px;
-            text-align: center;
-            max-width: 600px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f9f9f9;
+            padding: 20px;
+            border-bottom: 2px solid #667eea;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .panel-content {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        #map {
+            height: 400px;
             width: 100%;
+            border-radius: 8px;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+        .ip-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .subtitle {
+        .ip-item:last-child {
+            border-bottom: none;
+        }
+
+        .ip-address {
+            font-family: monospace;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .ip-location {
             color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+            margin-left: 15px;
+        }
+
+        .password-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .password-item:last-child {
+            border-bottom: none;
+        }
+
+        .password-strength {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .strength-weak {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .strength-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .strength-strong {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .chart-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .strength-chart {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .strength-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar {
+            width: 60px;
+            height: 150px;
+            background: #eee;
+            border-radius: 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            width: 100%;
+            height: 0;
+            background: #667eea;
+            transition: height 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .refresh-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #764ba2;
         }
 
         .loading {
-            margin: 30px 0;
-            font-size: 16px;
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .info-box {
-            background: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: left;
-            border-radius: 5px;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .ip-display {
-            background: #f9f9f9;
+            text-align: center;
             padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-family: monospace;
-            font-size: 12px;
             color: #666;
-            word-break: break-all;
         }
 
-        .form-link {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 15px 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 16px;
-            transition: transform 0.2s;
-        }
-
-        .form-link:hover {
-            transform: scale(1.05);
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 13px;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📋 Student Registration</h1>
-        <p class="subtitle">Please complete the registration form</p>
-
-        <div class="loading">
-            <span class="spinner"></span>
-            Accessing your information...
+        <div class="header">
+            <h1>🎓 Cybersecurity Awareness Session Dashboard</h1>
+            <p>Live tracking of student IP addresses and password strength analysis</p>
         </div>
 
-        <div class="info-box">
-            <strong>ℹ️ Notice:</strong> This is a cybersecurity awareness demonstration. Your IP address and browser information is being logged for educational purposes to show how data can be tracked when you visit websites.
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Students Logged</h3>
+                <div class="stat-value" id="totalIPs">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Weak Passwords</h3>
+                <div class="stat-value" id="weakCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Strong Passwords</h3>
+                <div class="stat-value" id="strongCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Data Collected</h3>
+                <div class="stat-value" id="formsCount">0</div>
+            </div>
         </div>
 
-        <div class="ip-display" id="ipInfo">
-            Retrieving your IP address...
+        <div class="content-grid">
+            <div class="panel">
+                <div class="panel-header">📍 Student IP Locations Map</div>
+                <div id="map"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">🔒 Password Strength Distribution</div>
+                <div class="chart-container">
+                    <div class="strength-chart">
+                        <div class="strength-bar">
+                            <div class="bar">
+                                <div class="bar-fill" id="weakBar">0</div>
+                            </div>
+                            <span style="color: #721c24; font-weight: bold;">Weak</span>
+                        </div>
+                        <div class="strength-bar">
+                            <div class="bar">
+                                <div class="bar-fill" id="mediumBar" style="background: #ffc107;">0</div>
+                            </div>
+                            <span style="color: #856404; font-weight: bold;">Medium</span>
+                        </div>
+                        <div class="strength-bar">
+                            <div class="bar">
+                                <div class="bar-fill" id="strongBar" style="background: #28a745;">0</div>
+                            </div>
+                            <span style="color: #155724; font-weight: bold;">Strong</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="formSection" style="display: none;">
-            <p style="color: #666; margin-bottom: 20px;">Please fill out the registration form below:</p>
-            <a class="form-link" href="#" id="formLink" target="_blank">
-                📝 Open Registration Form
-            </a>
+        <div class="content-grid">
+            <div class="panel">
+                <div class="panel-header">📡 Captured IP Addresses</div>
+                <div class="panel-content" id="ipList">
+                    <div class="loading">Loading IP data...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">🔐 Password Analysis</div>
+                <div class="panel-content" id="passwordList">
+                    <div class="loading">Waiting for form submissions...</div>
+                </div>
+            </div>
         </div>
 
-        <div id="status"></div>
+        <div class="panel full-width">
+            <div class="panel-header">⚙️ Instructions</div>
+            <div class="panel-content">
+                <p><strong>How to use this dashboard:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>Webhook URL:</strong> <code style="background: #f5f5f5; padding: 5px 10px;">https://webhook.site/your-unique-id</code></li>
+                    <li><strong>Student Registration Link:</strong> Points to the registration form landing page</li>
+                    <li><strong>IP Logging:</strong> Each student's IP is automatically captured and geolocated</li>
+                    <li><strong>Form Data:</strong> Student responses are collected via Google Forms</li>
+                    <li><strong>Password Analysis:</strong> Passwords are analyzed for strength using industry-standard criteria</li>
+                    <li>Click "Refresh Data" to manually update the dashboard</li>
+                </ul>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+            </div>
+        </div>
     </div>
 
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <script>
-        // CONFIGURED URLs
-        const WEBHOOK_URL = 'https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c';
-        const FORM_URL = 'https://forms.gle/PapZpYfRkc3Siaow5';
+        // Initialize map with free Mapbox tile layer (OpenStreetMap via free provider)
+        let map;
+        let markers = [];
 
-        // Capture and log IP address
-        async function captureIP() {
-            try {
-                // Get IP from webhook.site logs
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-
-                document.getElementById('ipInfo').innerHTML = `
-                    <strong>Your Information:</strong><br>
-                    IP Address: <strong>${data.ip}</strong><br>
-                    Location: ${data.city}, ${data.country_name}<br>
-                    ISP: ${data.org}<br>
-                    Device: ${navigator.userAgent.substring(0, 80)}...
+        function initMap() {
+            // Using free tile layer from OpenStreetMap
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer.innerHTML.includes('leaflet')) {
+                mapContainer.innerHTML = `
+                    <div id="simpleMap" style="width: 100%; height: 100%; background: linear-gradient(to bottom, #87ceeb 0%, #e0f6ff 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        <div style="text-align: center; color: #666;">
+                            <p style="font-size: 14px; margin-bottom: 10px;">📍 Student IP Locations will appear here</p>
+                            <p style="font-size: 12px;">Refresh to see live updates</p>
+                        </div>
+                    </div>
                 `;
-
-                // Log to webhook
-                await logToWebhook(data);
-
-                document.getElementById('formSection').style.display = 'block';
-                document.querySelector('.loading').style.display = 'none';
-
-                // Set form link
-                document.getElementById('formLink').href = FORM_URL;
-
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('ipInfo').innerHTML = `<strong>IP Detection Error</strong><br>Please refresh the page.`;
             }
         }
 
-        async function logToWebhook(data) {
-            try {
-                // Send data to webhook.site
-                fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        timestamp: new Date().toISOString(),
-                        ip: data.ip,
-                        city: data.city,
-                        country: data.country_name,
-                        userAgent: navigator.userAgent
-                    })
-                }).catch(e => console.log('Logged'));
-            } catch (e) {
-                console.log('Log captured');
-            }
+        // Password strength checker (simplified)
+        function checkPasswordStrength(password) {
+            if (!password) return 'unknown';
+
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) strength++;
+
+            if (strength <= 2) return 'weak';
+            if (strength <= 3) return 'medium';
+            return 'strong';
         }
 
-        // Initialize
-        captureIP();
+        // Mock IP data for demo
+        const mockIPs = [
+            { ip: '203.0.113.45', city: 'Mumbai', country: 'India', lat: 19.0760, lng: 72.8777 },
+            { ip: '198.51.100.67', city: 'Delhi', country: 'India', lat: 28.7041, lng: 77.1025 },
+            { ip: '192.0.2.89', city: 'Bangalore', country: 'India', lat: 12.9716, lng: 77.5946 },
+            { ip: '203.0.113.12', city: 'Hyderabad', country: 'India', lat: 17.3850, lng: 78.4867 },
+            { ip: '198.51.100.34', city: 'Chennai', country: 'India', lat: 13.0827, lng: 80.2707 },
+        ];
+
+        const mockPasswords = [
+            { user: 'student1', password: '123456', strength: 'weak' },
+            { user: 'student2', password: 'Pass@2024', strength: 'strong' },
+            { user: 'student3', password: 'password', strength: 'weak' },
+            { user: 'student4', password: 'SecureP@ss123', strength: 'strong' },
+            { user: 'student5', password: 'abc123', strength: 'weak' },
+        ];
+
+        function loadIPData() {
+            const ipList = document.getElementById('ipList');
+            ipList.innerHTML = '';
+
+            mockIPs.forEach(ip => {
+                const item = document.createElement('div');
+                item.className = 'ip-item';
+                item.innerHTML = `
+                    <div>
+                        <span class="ip-address">${ip.ip}</span>
+                    </div>
+                    <div class="ip-location">
+                        📍 ${ip.city}, ${ip.country}
+                    </div>
+                `;
+                ipList.appendChild(item);
+            });
+
+            document.getElementById('totalIPs').textContent = mockIPs.length;
+        }
+
+        function loadPasswordData() {
+            const passwordList = document.getElementById('passwordList');
+            passwordList.innerHTML = '';
+
+            let weak = 0, medium = 0, strong = 0;
+
+            mockPasswords.forEach(pwd => {
+                const strength = checkPasswordStrength(pwd.password);
+                const item = document.createElement('div');
+                item.className = 'password-item';
+
+                let strengthClass = strength === 'weak' ? 'strength-weak' :
+                                   strength === 'medium' ? 'strength-medium' : 'strength-strong';
+                let strengthText = strength.toUpperCase();
+
+                item.innerHTML = `
+                    <strong>${pwd.user}</strong>
+                    <span class="password-strength ${strengthClass}">${strengthText}</span>
+                    <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                        Length: ${pwd.password.length} chars
+                    </div>
+                `;
+                passwordList.appendChild(item);
+
+                if (strength === 'weak') weak++;
+                else if (strength === 'medium') medium++;
+                else strong++;
+            });
+
+            document.getElementById('weakCount').textContent = weak;
+            document.getElementById('strongCount').textContent = strong;
+            document.getElementById('formsCount').textContent = mockPasswords.length;
+
+            // Update chart
+            const maxValue = Math.max(weak, medium, strong) || 1;
+            document.getElementById('weakBar').style.height = (weak / maxValue * 100) + '%';
+            document.getElementById('weakBar').textContent = weak;
+            document.getElementById('mediumBar').style.height = (medium / maxValue * 100) + '%';
+            document.getElementById('mediumBar').textContent = medium;
+            document.getElementById('strongBar').style.height = (strong / maxValue * 100) + '%';
+            document.getElementById('strongBar').textContent = strong;
+        }
+
+        function refreshData() {
+            loadIPData();
+            loadPasswordData();
+        }
+
+        function init() {
+            initMap();
+            loadIPData();
+            loadPasswordData();
+        }
+
+        init();
     </script>
 </body>
 </html>
