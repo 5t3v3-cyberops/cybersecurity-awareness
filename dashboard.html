@@ -363,7 +363,32 @@
     </div>
 
     <script>
-        const SHEET_ID = '2PACX-1vR8VdKyOUEAq1kpZ37CoKOaFq3lF46kmMxC-v2SV_7MH8nyVjROPPSSJPlPreOFrR5snmac6C52R_Vq';
+        // Actual Sheet ID (not the publish key) - used with gviz query API which looks up sheets by NAME, not gid
+        const SHEET_ID = '1khLJZBGICUMIX53WLHYLOoJ5R5XFzMFtNUpmPv4qkDY';
+
+        function gvizUrl(sheetName) {
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+        }
+
+        // Minimal CSV line parser that respects quoted fields (gviz always quotes strings)
+        function parseCsvLine(line) {
+            const cols = [];
+            let cur = '', inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const c = line[i];
+                if (inQuotes) {
+                    if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+                    else if (c === '"') { inQuotes = false; }
+                    else { cur += c; }
+                } else {
+                    if (c === '"') inQuotes = true;
+                    else if (c === ',') { cols.push(cur); cur = ''; }
+                    else cur += c;
+                }
+            }
+            cols.push(cur);
+            return cols;
+        }
 
         function checkPasswordStrength(password) {
             if (!password) return 'unknown';
@@ -382,21 +407,20 @@
 
         async function loadIPData() {
             try {
-                // Try gid=1 first (IP_Logs sheet created by Apps Script), fallback to gid=0
-                let sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=1`;
-                let response = await fetch(sheetUrl);
-                let csv = await response.text();
-
-                // If empty or error, try gid=0
-                if (!csv || csv.includes('<html') || csv.length < 10) {
-                    sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=0`;
-                    response = await fetch(sheetUrl);
-                    csv = await response.text();
-                }
-                const lines = csv.split('\n').filter(line => line.trim());
+                const response = await fetch(gvizUrl('IP_Logs'));
+                const csv = await response.text();
 
                 const ipList = document.getElementById('ipList');
                 ipList.innerHTML = '';
+
+                // gviz returns an error payload (not CSV) if the sheet doesn't exist yet
+                if (!response.ok || csv.includes('#N/A') || csv.trim().startsWith('<')) {
+                    ipList.innerHTML = '<div class="loading-text">IP_Logs sheet not found yet. Waiting for first student visit...</div>';
+                    document.getElementById('ipCount').textContent = '0';
+                    return;
+                }
+
+                const lines = csv.split('\n').filter(line => line.trim());
 
                 if (lines.length <= 1) {
                     ipList.innerHTML = '<div class="loading-text">No IPs logged yet. Waiting for students...</div>';
@@ -406,7 +430,7 @@
 
                 const ips = [];
                 for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(',');
+                    const cols = parseCsvLine(lines[i]);
                     if (cols[1]) {
                         ips.push({
                             timestamp: cols[0] || '',
@@ -464,8 +488,7 @@
 
         async function loadRegistrationData() {
             try {
-                const sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv`;
-                const response = await fetch(sheetUrl);
+                const response = await fetch(gvizUrl('Form Responses 1'));
                 const csv = await response.text();
                 const lines = csv.split('\n').filter(line => line.trim());
 
@@ -475,11 +498,18 @@
                     return;
                 }
 
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-                const nameIdx = headers.findIndex(h => h.includes('name') && !h.includes('father'));
-                const emailIdx = headers.findIndex(h => h.includes('email'));
-                const usernameIdx = headers.findIndex(h => h.includes('username'));
-                const passwordIdx = headers.findIndex(h => h.includes('password'));
+                const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
+                let nameIdx = headers.findIndex(h => h.includes('name') && !h.includes('father'));
+                let emailIdx = headers.findIndex(h => h.includes('email'));
+                let usernameIdx = headers.findIndex(h => h.includes('username'));
+                let passwordIdx = headers.findIndex(h => h.includes('password'));
+
+                // Fallback: headers are generic ("Column 1", "Column 2"...) because the Google
+                // Form questions have no titles set. Falls back to known column order:
+                // Timestamp, Name, DOB, Phone, Email, Address, Username, Password
+                if (passwordIdx === -1 && headers[0] && headers[0].startsWith('column')) {
+                    nameIdx = 1; emailIdx = 4; usernameIdx = 6; passwordIdx = 7;
+                }
 
                 if (passwordIdx === -1) return;
 
@@ -487,15 +517,15 @@
                 const registrations = [];
 
                 for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(',');
+                    const cols = parseCsvLine(lines[i]);
                     if (cols[passwordIdx]) {
-                        const pwd = cols[passwordIdx].trim().replace(/"/g, '');
+                        const pwd = cols[passwordIdx].trim();
                         if (pwd) {
                             const strength = checkPasswordStrength(pwd);
                             registrations.push({
-                                name: nameIdx >= 0 ? cols[nameIdx].trim().replace(/"/g, '') : 'N/A',
-                                email: emailIdx >= 0 ? cols[emailIdx].trim().replace(/"/g, '') : 'N/A',
-                                username: usernameIdx >= 0 ? cols[usernameIdx].trim().replace(/"/g, '') : 'N/A',
+                                name: nameIdx >= 0 ? cols[nameIdx].trim() : 'N/A',
+                                email: emailIdx >= 0 ? cols[emailIdx].trim() : 'N/A',
+                                username: usernameIdx >= 0 ? cols[usernameIdx].trim() : 'N/A',
                                 password: pwd,
                                 strength: strength
                             });
