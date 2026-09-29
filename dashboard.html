@@ -605,10 +605,11 @@
                     if (cols[passwordIdx]) {
                         const pwd = cols[passwordIdx].trim();
                         if (pwd) {
-                            const strength = checkPasswordStrength(pwd);
                             const username = usernameIdx >= 0 ? cols[usernameIdx].trim() : 'N/A';
                             const email = emailIdx >= 0 ? cols[emailIdx].trim() : 'N/A';
                             const credMatch = credentialsMatchPassword(pwd, username, email);
+                            // Password = username/email is always weak, regardless of length/complexity
+                            const strength = credMatch ? 'weak' : checkPasswordStrength(pwd);
                             registrations.push({
                                 name: nameIdx >= 0 ? cols[nameIdx].trim() : 'N/A',
                                 email: email,
