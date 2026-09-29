@@ -382,9 +382,17 @@
 
         async function loadIPData() {
             try {
-                const sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=0&range=IP_Logs!A:I`;
-                const response = await fetch(sheetUrl);
-                const csv = await response.text();
+                // Try gid=1 first (IP_Logs sheet created by Apps Script), fallback to gid=0
+                let sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=1`;
+                let response = await fetch(sheetUrl);
+                let csv = await response.text();
+
+                // If empty or error, try gid=0
+                if (!csv || csv.includes('<html') || csv.length < 10) {
+                    sheetUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/pub?output=csv&gid=0`;
+                    response = await fetch(sheetUrl);
+                    csv = await response.text();
+                }
                 const lines = csv.split('\n').filter(line => line.trim());
 
                 const ipList = document.getElementById('ipList');
